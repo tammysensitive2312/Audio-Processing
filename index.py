@@ -1,8 +1,7 @@
 import tkinter as tk
-from tkinter import filedialog, simpledialog
+from tkinter import simpledialog
 from functools import partial
 from pydub import AudioSegment
-from pydub.playback import play
 import os
 import numpy as np
 import matplotlib.pyplot as plt

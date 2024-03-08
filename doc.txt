@@ -1,0 +1,63 @@
+* Góc độ kỹ thuật của các chức năng xử lý âm thanh 
+gồm có chức năng chính sau : 
++ quay ngược đoạn âm thanh
++ hiệu ứng nhiễu (biến dạng âm thanh)
+
+Bước 1: Chuyển đoạn âm thanh PyDub sang mảng numpy để có thể thao tác với dữ liệu âm thanh dưới dạng mảng các mẫu âm thanh.
+
+Bước 2: Điều chỉnh kiểu dữ liệu của mẫu âm thanh sang float32 để phù hợp với việc áp dụng các phép toán số học mà không gặp phải vấn đề overflow khi sử dụng hàm tanh.
+
+Bước 3: Áp dụng hàm tanh lên các mẫu âm thanh. Hàm tanh (tangente hyperbolique) là một hàm phi tuyến tính, được sử dụng để tạo ra hiệu ứng biến dạng bằng cách "bẻ cong" các mẫu âm thanh khi chúng đạt đến một mức độ nhất định. Các mẫu được chuẩn hóa trước khi áp dụng hàm tanh bằng cách chia cho giá trị tuyệt đối lớn nhất trong mảng mẫu, sau đó nhân với distortion_level để điều chỉnh mức độ biến dạng.
+
+Bước 4: Chuẩn hóa lại các mẫu âm thanh đã được biến dạng để chúng trở về độ lớn gần giống với mẫu âm thanh ban đầu. Điều này đảm bảo rằng biến dạng không làm thay đổi quá mức âm lượng tổng thể của đoạn âm thanh.
+
+Bước 5: Chuyển các mẫu đã biến dạng trở lại kiểu dữ liệu ban đầu (thường là int16 hoặc int32, tùy thuộc vào định dạng ban đầu của âm thanh) và tạo ra một đoạn âm thanh PyDub mới từ các mẫu này.
+
+Qua các bước trên,áp dụng kỹ thuật distortion một cách hiệu quả, sử dụng hàm tanh để tạo ra hiệu ứng biến dạng mạnh mẽ và điều chỉnh được mức độ biến dạng thông qua tham số distortion_level. Điều này cho phép bạn tạo ra một loạt các hiệu ứng âm thanh biến dạng, từ nhẹ nhàng đến cực kỳ biến dạng, tùy thuộc vào giá trị của distortion_level.
+
++ fade_in/fade_out
+
+Hiệu ứng fade-in và fade-out là các kỹ thuật xử lý âm thanh cơ bản, thường được sử dụng để làm mềm sự chuyển tiếp vào và ra của một đoạn âm thanh.
+
+fade_in(time_ms): áp dụng hiệu ứng fade-in cho đoạn âm thanh, nơi time_ms là thời gian diễn ra quá trình fade-in tính bằng mili giây. Trong quá trình này, âm lượng của đoạn âm thanh tăng dần từ 0 lên đến mức âm lượng ban đầu của nó.
+
+fade_out(time_ms): áp dụng hiệu ứng fade-out, với time_ms là thời gian diễn ra quá trình fade-out. Âm lượng của đoạn âm thanh sẽ giảm dần từ mức âm lượng hiện tại của nó xuống còn 0 trong khoảng thời gian này.
+
+Kỹ thuật này dựa vào việc điều chỉnh dần dần âm lượng của đoạn âm thanh trong một khoảng thời gian xác định để tạo ra hiệu ứng "dần vào" hoặc "dần ra".
++ lọc tần số âm thanh
+
+Low-Pass Filter (Bộ Lọc Thấp Qua)
+Tác Dụng: Loại bỏ các tần số cao và chỉ cho phép các tần số thấp qua.
+Ứng Dụng:
+Giảm nhiễu hoặc loại bỏ tần số cao không mong muốn.
+Làm mềm âm thanh.
+Bảo vệ loa khỏi các tần số cao có thể gây hại.
+
+High-Pass Filter (Bộ Lọc Cao Qua)
+Tác Dụng: Loại bỏ các tần số thấp và chỉ cho phép các tần số cao qua.
+Ứng Dụng:
+Loại bỏ tiếng ồn ở tần số thấp như tiếng gầm, tiếng hú, hoặc âm thanh nền.
+Làm nổi bật chi tiết và độ sáng của âm thanh.
+Ngăn chặn tác động của tần số thấp lên các thiết bị như microphones hoặc loa.
+
+Low-Pass Filter: Loại bỏ các phần của tín hiệu âm thanh có tần số cao hơn tần số cắt, làm cho âm thanh trở nên "mềm mại" hơn và giảm thiểu nhiễu tần số cao.
+
+High-Pass Filter: Loại bỏ các phần của tín hiệu âm thanh có tần số thấp hơn tần số cắt, giúp loại bỏ tiếng ồn nền, tiếng gầm, hoặc tăng cường chi tiết trong các tần số cao hơn.
+
+Qua việc sử dụng pydub và các công cụ liên quan, bạn có thể dễ dàng áp dụng các kỹ thuật xử lý tần số phức tạp mà không cần phải hiểu sâu về các thuật toán xử lý tín hiệu số.
++ tạo hiệu ứng vang
+
+1. Tạo Bản Sao với Âm Lượng Giảm Dần
+Mỗi lần lặp qua vòng lặp for, bạn tạo ra một bản sao của đoạn âm thanh gốc (audio) với âm lượng được giảm xuống. Việc giảm âm lượng được tính toán dựa trên tỷ lệ suy giảm (decay) và số lần lặp (i). Sự giảm âm lượng này mô phỏng hiệu ứng vang tự nhiên, nơi mỗi lần phản xạ âm thanh lại yếu đi do sự hấp thụ của môi trường.
+
+2. Áp dụng Delay (Độ Trễ)
+Đối với mỗi bản sao của đoạn âm thanh, bạn thêm một khoảng độ trễ (delay) trước khi nó được chơi lại. Khoảng độ trễ này tăng lên với mỗi lần lặp, tạo ra cảm giác vang thực sự, nơi mỗi dấu vết vang lại cách nhau một khoảng thời gian cố định.
+
+3. Overlay (Chồng Chéo) các Đoạn Âm Thanh
+Sử dụng phương thức overlay từ pydub, bạn chồng chéo các bản sao âm lượng giảm này lên trên đoạn âm thanh gốc, tại các điểm thời gian tương ứng với độ trễ đã tính. Phương thức overlay cho phép bạn kết hợp nhiều đoạn âm thanh vào một, giữ nguyên âm thanh gốc trong khi thêm các tín hiệu "vang" vào các điểm thời gian cụ thể.
+
+Qua việc lặp lại và chồng chéo các bản sao với độ trễ và suy giảm âm lượng, bạn tạo ra hiệu ứng vang mô phỏng việc âm thanh phản xạ lại từ các bề mặt trong một không gian, như tường hoặc vật cản. Mỗi lần âm thanh phản xạ, nó trở nên yếu đi một chút, tạo ra hiệu ứng vang dần dần biến mất.
+
++ ghép đoạn âm thanh
+
+ ghép nhiều đoạn âm thanh lại với nhau thành một tệp âm thanh duy nhất. Hàm này thực hiện điều này thông qua một loạt các bước, từ việc chọn tệp, điều chỉnh âm lượng, ghép nối, và cuối cùng là xuất file âm thanh
